@@ -1,0 +1,38 @@
+-------------------------
+-Changelog for Scavenger-
+-------------------------
+**************
+**05.07.2011**
+**************
+
+decorators.py
+- Added two new arguments to the decorator
+  * ip_address=None
+	string representation of the address
+	This is the address for the static machine somewhere over the ..internet (I bet you
+	already expected for rainbow :-P)
+  * prefer_static=False
+	boolean value	
+	This can be used to define whether to use the static machine always or schedule instead?
+- Calls ThreeTierProfTaskInvokation to create the task
+
+task.py
+- Replaced the adaptive task invocation with 3-tier invocation. The information contained 
+  within the task is basically the same, except added the values for ip address and 
+  whether to prefer static or not
+  * ip_address=None
+  * prefer_static=False
+
+threetierprofilingscheduler.py
+- Created completely new scheduler. The main idea here is to allow the use of static
+  machine. Currently still missing the implementation to actually differ from the
+  adaptive profiler
+
+scavenger.py
+- Added the 3-tier profiler to import
+- Added the 3-tier task invocation to imports
+- changed scavenge() function to take also the ip_address=None and prefer_static=False
+  in order to allow the developer also to define the scanvenging manually
+- scavenge() also uses ThreeTierProfTaskInvokation instead of the previous adaptive one 
+
+
