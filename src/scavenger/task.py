@@ -75,13 +75,16 @@ class TaskInvokation(object):
     id = property(**id())
 
 
-class AdaptiveProfTaskInvokation(TaskInvokation):
-    def __init__(self, name, _input = None, code = None, store = False, scheduler = 'aprofile',
-                 output_size = None, complexity_relation = None):
-        super(AdaptiveProfTaskInvokation, self).__init__(name, _input, code, store, scheduler)
+class ThreeTierProfTaskInvokation(TaskInvokation):
+    def __init__(self, name, _input = None, code = None, store = False, scheduler = '3profile',
+                 output_size = None, complexity_relation = None, ip_address=None, prefer_static=False):
+        super(ThreeTierProfTaskInvokation, self).__init__(name, _input, code, store, scheduler)
         self._output_size = output_size
         self._complexity_relation = complexity_relation
         self._complexity = None
+        self._ip_address = ip_address
+        self._prefer_static = prefer_static
+        
 
     def output_size(): #@NoSelf
         doc = """Property for output_size"""
@@ -116,4 +119,25 @@ class AdaptiveProfTaskInvokation(TaskInvokation):
         return locals()
     complexity = property(**complexity())
     
+    def ip_address(): #@NoSelf
+        doc = """ property for the ip address """
+        def fget(self):
+            return self._ip_address
+        def fset(self, value):
+            self._ip_address = value
+        def fdel(self):
+            del self._ip_address
+        return locals()
+    ip_address = property(**ip_address())
+    
+    def prefer_static(): #@NoSelf
+        doc = """ property for prefering static ip """
+        def fget(self):
+            return self._prefer_static
+        def fset(self, value):
+            self._prefer_static = value
+        def fdel(self):
+            del self._prefer_static
+        return locals()
+    prefer_static = property(**prefer_static())
     

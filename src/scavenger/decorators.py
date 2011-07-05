@@ -1,4 +1,4 @@
-from task import AdaptiveProfTaskInvokation
+from task import ThreeTierProfTaskInvokation
 from scavenger import Scavenger
 from inspect import getsource, getmodule
 from functools import partial
@@ -15,9 +15,10 @@ def decorator_with_args(decorator):
         return new2
     return new
 
-# This decorator is used when invoking the Adaptive Profiling Scheduler.
+# This decorator is used when invoking the Three Tier Profiling Scheduler.
 @decorator_with_args
-def scavenge(fn, output_size, complexity_relation = None, store = False):
+def scavenge(fn, output_size, complexity_relation = None, store = False,
+             ip_address=None, prefer_static=False):
     # Modify the source to remove the decorator and rename the method
     # to 'perform'.
     source = getsource(fn)
@@ -29,12 +30,16 @@ def scavenge(fn, output_size, complexity_relation = None, store = False):
     source_md5 = hashlib.md5(source).hexdigest()
     task_name = 'auto.%s.%s'%(module_name, source_md5) 
 
+#    print "IP: ", ip_address, "---", "Preferred?:", prefer_static
+
     # Build a service invokation object.
-    service_invokation = AdaptiveProfTaskInvokation(name = task_name, 
+    service_invokation = ThreeTierProfTaskInvokation(name = task_name, 
                                                     code = source, 
                                                     store = store,
                                                     output_size = output_size,
-                                                    complexity_relation = complexity_relation)
+                                                    complexity_relation = complexity_relation,
+                                                    ip_address = ip_address,
+                                                    prefer_static = prefer_static)
 
     return partial(Scavenger.scavenge_partial, service_invokation, fn)
 

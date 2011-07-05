@@ -18,10 +18,10 @@
 from __future__ import with_statement
 from context import ContextMonitor
 from scrpc import SCProxy
-from schedule import ScheduleError, AdaptiveProfScheduler
+from schedule import ScheduleError, ThreeTierProfScheduler
 from config import Config
 from datastore import RemoteDataHandle
-from task import AdaptiveProfTaskInvokation
+from task import ThreeTierProfTaskInvokation
 from time import time
 from threading import Lock
 from copy import deepcopy
@@ -84,7 +84,7 @@ class Scavenger(object):
 
         # Create the schedulers.
         self._schedulers = {}
-        self._schedulers['aprofile'] = AdaptiveProfScheduler(self._monitor._context, Scavenger)
+        self._schedulers['3profile'] = ThreeTierProfScheduler(self._monitor._context, Scavenger)
 
         # Load in the config.
         self._config = Config.get_instance()
@@ -162,9 +162,9 @@ class Scavenger(object):
         # Fire the RPC call.
         proxy = connection if connection != None else SCProxy(peer.address)
         try:
-            if task.scheduler in ('aprofile'):
+            if task.scheduler in ('3profile'):
                 result, complexity = proxy.perform_task(task.name, task.input, ScavengerDefines.TIMEOUT, task.store, True)
-                if task.scheduler == 'aprofile':
+                if task.scheduler == '3profile':
                     self._schedulers[task.scheduler].gprofile.register(task.name, complexity, task.complexity)
                     self._schedulers[task.scheduler].lprofile.register((peer.name, task.name), complexity, task.complexity)
                 return result
@@ -255,8 +255,10 @@ class Scavenger(object):
         return task_input
 
     @classmethod
-    def scavenge(cls, task_name, task_input, task_code=None, local_code=None):
-        task_invocation = AdaptiveProfTaskInvokation(task_name, task_input, task_code, output_size='0') 
+    def scavenge(cls, task_name, task_input, task_code=None, local_code=None, 
+                 ip_address=None, prefer_static=False):
+        task_invocation = ThreeTierProfTaskInvokation(task_name, task_input, task_code, output_size='0',
+                                                      ip_address=ip_address, prefer_static=prefer_static) 
         return cls.INSTANCE._scavenge(task_invocation, local_code)
     
     def _scavenge(self, task, local_code=None):
@@ -312,7 +314,7 @@ class Scavenger(object):
                         self._activity.decrement()
 
                 
-                if task.scheduler in ('aprofile'):
+                if task.scheduler in ('3profile'):
                     # We need to profile this task run.
                     start = time()
                     start_activity = self._activity.value
@@ -321,7 +323,7 @@ class Scavenger(object):
                     stop = time()
                     activity_level = float(start_activity + stop_activity) / 2
                     complexity = ((stop-start) * self._config.getfloat('cpu', 'strength')) / activity_level
-                    if task.scheduler == 'aprofile':
+                    if task.scheduler == '3profile':
                         self._schedulers[task.scheduler].gprofile.register(task.name, complexity, task.complexity)
                         self._schedulers[task.scheduler].lprofile.register(('localhost', task.name), complexity, task.complexity)
                     return result
@@ -347,9 +349,9 @@ class Scavenger(object):
         """Make a clean break from Presence."""
         self._monitor.shutdown()
         # Save the profiling data.
-        self._schedulers['aprofile'].lprofile.save()
-        self._schedulers['aprofile'].gprofile.save()
-#        self._schedulers['aprofile']._log.close()
+        self._schedulers['3profile'].lprofile.save()
+        self._schedulers['3profile'].gprofile.save()
+#        self._schedulers['3profile']._log.close()
 
     @classmethod
     def resolve(cls, peer_name):
